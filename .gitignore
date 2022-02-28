@@ -1,0 +1,25 @@
+## Files
+
+# R files (.rds, workspace etc)
+*.Rhistory
+*.RData
+.Rapp.history
+
+# Auto-save stuff:
+*~
+
+# swp files
+*.swp
+
+# pdf file and other documents
+*.pdf
+*.docx
+
+## IDE related
+
+# RStudio
+.Rproj.user/
+*.Rproj
+
+# Pycharm
+.idea/
