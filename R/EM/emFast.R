@@ -29,6 +29,9 @@ emFast <- function (Y, iters, theta0){
     R <- patts[-nrow(patts),-ncol(patts)]
     R <- R[, colnames(Y)]
 
+  # Data dimensionality
+  n <- nrow(Y)
+
   # Number of missing data patterns
   S <- nrow(R)
   # Columns observed for a given pattern
