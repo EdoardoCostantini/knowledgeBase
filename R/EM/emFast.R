@@ -1,10 +1,10 @@
 # Project:   knowledgeBase
 # Objective: function to estimate descriptives on data w/ miss fast R style
 # Author:    Edoardo Costantini
-# Notion:
-# Other ref:
 # Created:   2021-12-02
 # Modified:  2021-12-02
+# Notion:
+# Other ref:
 # Note:      This function implements the EM psuedo code for normal data
 #            with missing values in a general patter presented by
 #            Schafer 1997 (figure 5.2 under section 5.3.3), but tries
@@ -26,8 +26,8 @@ emFast <- function (Y, iters, theta0){
 
   # Define Missing data patterns
   patts <- mice::md.pattern(Y, plot = FALSE)
-    R <- patts[-nrow(patts),-ncol(patts)]
-    R <- R[, colnames(Y)]
+    R <- patts[-nrow(patts),-ncol(patts), drop = FALSE]
+    R <- R[, colnames(Y), drop = FALSE]
 
   # Data dimensionality
   n <- nrow(Y)

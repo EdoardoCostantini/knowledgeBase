@@ -1,10 +1,10 @@
 # Project:   knowledgeBase
 # Objective: function to estimate descriptives on data w/ miss Schafer style
 # Author:    Edoardo Costantini
-# Notion:
-# Other ref:
 # Created:   2021-12-02
 # Modified:  2021-12-02
+# Notion:
+# Other ref:
 # Note:      This function implements (almost) exactly the psuedo code
 #            Schafer 1997 presents in figure 5.2 under section 5.3.3
 #            One key difference is in how I achive simmetry.
@@ -25,8 +25,8 @@ emSchafer <- function (Y, iters, theta0){
 
   # Define Missing data patterns
   patts <- mice::md.pattern(Y, plot = FALSE)
-    R <- patts[-nrow(patts),-ncol(patts)]
-    R <- R[, colnames(Y)]
+    R <- patts[-nrow(patts), -ncol(patts), drop = FALSE]
+    R <- R[, colnames(Y), drop = FALSE]
 
   # Data dimensionality
   n <- nrow(Y)
