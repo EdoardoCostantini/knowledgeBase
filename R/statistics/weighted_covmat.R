@@ -1,10 +1,10 @@
 # Project:   knowledgeBase
 # Objective: see how the weigthed covairance matrix work
 # Author:    Edoardo Costantini
-# Notion:
-# Other ref:
 # Created:   2022-02-28
 # Modified:  2022-03-01
+# Notion:
+# Other ref:
 
 # Set up -----------------------------------------------------------------------
 

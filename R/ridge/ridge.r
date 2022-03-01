@@ -1,10 +1,10 @@
 # Project:   knowledgeBase
 # Objective: explore the ridge principle and ridge regression nuances
 # Author:    Edoardo Costantini
-# Notion:    https://lavish-hollyhock-981.notion.site/Ridge-regression-8134d8babda5413ab182df645c6196a8
-# Other ref:
 # Created:   2022-02-28
 # Modified:  2022-02-28
+# Notion:    https://lavish-hollyhock-981.notion.site/Ridge-regression-8134d8babda5413ab182df645c6196a8
+# Other ref:
 
 # Centering X: effect on interpretation of OLS intercept -----------------------
 

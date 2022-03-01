@@ -1,10 +1,10 @@
 # Project:   knowledgeBase
 # Objective: function for sweep operator according to Goodnight 1979 p. 154
 # Author:    Edoardo Costantini
-# Notion:    https://lavish-hollyhock-981.notion.site/Sweep-operator-a2147fb983594364a71b23398fbc0856
-# Other ref:
 # Created:   2021-11-23
 # Modified:  2021-11-23
+# Notion:    https://lavish-hollyhock-981.notion.site/Sweep-operator-a2147fb983594364a71b23398fbc0856
+# Other ref:
 
 sweepGoodnight <- function (A, target){
 

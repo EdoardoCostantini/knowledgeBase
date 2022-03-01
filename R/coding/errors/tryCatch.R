@@ -1,10 +1,10 @@
 # Project:   knowledgeBase
 # Objective: Using the tryCatch function
 # Author:    Edoardo Costantini
-# Notion:
-# Other ref: https://stackoverflow.com/questions/12193779/how-to-write-trycatch-in-r
 # Created:   2022-02-28
 # Modified:  2022-02-28
+# Notion:
+# Other ref: https://stackoverflow.com/questions/12193779/how-to-write-trycatch-in-r
 
 # Define a function that reads what is in a url with tryCatch statements
 readUrl <- function(url) {

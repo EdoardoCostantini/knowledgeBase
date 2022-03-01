@@ -1,10 +1,10 @@
 # Project:   knowledgeBase
 # Objective: showing differences in how EM and DA missing data handling works
 # Author:    Edoardo Costantini
-# Notion:
-# Other ref:
 # Created:   2021-11-17
 # Modified:  2021-12-02
+# Notion:
+# Other ref:
 
 # Packages --------------------------------------------------------
   library(mvtnorm) # for likelihood functions

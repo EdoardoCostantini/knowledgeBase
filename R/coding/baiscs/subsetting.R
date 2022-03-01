@@ -1,10 +1,10 @@
 # Project:   knowledgeBase
 # Objective: Understanding subsetting
 # Author:    Edoardo Costantini
-# Notion:
-# Other ref: http://adv-r.had.co.nz/Subsetting.html
 # Created:   2022-02-28
 # Modified:  2022-02-28
+# Notion:
+# Other ref: http://adv-r.had.co.nz/Subsetting.html
 
 # Data Types --------------------------------------------------------------
 # Atomic vector

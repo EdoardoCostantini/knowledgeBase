@@ -1,10 +1,10 @@
 # Project:   knowledgeBase
 # Objective: Understand the sweep operator
 # Author:    Edoardo Costantini
-# Notion:    https://lavish-hollyhock-981.notion.site/Sweep-operator-a2147fb983594364a71b23398fbc0856
-# Other ref:
 # Created:   2021-11-19
 # Modified:  2021-11-26
+# Notion:    https://lavish-hollyhock-981.notion.site/Sweep-operator-a2147fb983594364a71b23398fbc0856
+# Other ref:
 
 # Packages and functions
 source("sweepGoodnight.R") # main sweep function

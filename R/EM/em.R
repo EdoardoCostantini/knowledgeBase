@@ -1,10 +1,10 @@
 # Project:   knowledgeBase
 # Objective: Explore a simple case of EM algorithm with missing values
 # Author:    Edoardo Costantini
-# Notion:
-# Other ref:
 # Created:   2021-11-17
 # Modified:  2021-12-02
+# Notion:
+# Other ref:
 
 rm(list = ls())
 
@@ -120,3 +120,28 @@ rm(list = ls())
     columns = c("test", "replications", "elapsed",
                 "relative", "user.self", "sys.self")
   )
+
+# Weighted version -------------------------------------------------------------
+
+# use example dataset from example of stats::cov.wt()
+xy <- cbind(x = 1:10, y = c(1:3, 8:5, 8:10))
+w1 <- c(0, 0, 0, 1, 1, 1, 1, 1, 0, 0)
+p <- ncol(xy)
+
+# Wrong
+cov(xy)
+
+# Target
+cov.wt(xy, wt = w1, method = "ML")$cov # i.e. method = "unbiased"
+
+#
+# Starting value
+  theta0 <- matrix(rep(1, (p+1)^2 ), ncol = (p+1),
+                  dimnames = list(c("int", colnames(xy)),
+                                  c("int", colnames(xy))
+                  ))
+  theta0[, 1]   <- c(-1, rep(0, p)) # T1 CC
+  theta0[1, ]   <- c(-1, rep(0, p))
+
+  # Run function
+  theta_hat_f <- emFast(Y = xy, iters = 500, theta0 = theta0)
