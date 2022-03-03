@@ -2,7 +2,7 @@
 # Objective: Explore a simple case of EM algorithm with missing values
 # Author:    Edoardo Costantini
 # Created:   2021-11-17
-# Modified:  2021-12-02
+# Modified:  2022-03-01
 # Notion:
 # Other ref:
 
@@ -108,6 +108,7 @@ rm(list = ls())
   # Assess results
   theta0
   round(theta_hat[1, ], 3)             # means
+  round(sqrt(diag(theta_hat)[-1]), 3)  # standard deviations
   round(theta_hat[-1, -1], 3)          # covariance matrix
   round(cov2cor(theta_hat[-1, -1]), 3) # correlation matrix
 
@@ -124,24 +125,29 @@ rm(list = ls())
 # Weighted version -------------------------------------------------------------
 
 # use example dataset from example of stats::cov.wt()
-xy <- cbind(x = 1:10, y = c(1:3, 8:5, 8:10))
-w1 <- c(0, 0, 0, 1, 1, 1, 1, 1, 0, 0)
-p <- ncol(xy)
+Y <- Y_full <- cbind(Y1 = 1:10, Y2 = c(1:3, 8:5, 8:10))
 
-# Wrong
-cov(xy)
+# Add a missing value
+Y[10, 1] <- NA
+Y[1, 2] <- NA
+
+p <- ncol(Y)
+n <- nrow(Y)
+
+# Starting value
+theta0 <- matrix(rep(NA, (p+1)^2 ), ncol = (p+1),
+                dimnames = list(c("int", colnames(Y)),
+                                c("int", colnames(Y))
+                ))
+theta0[, 1]   <- c(-1, colMeans(Y, na.rm = TRUE)) # T1 CC
+theta0[1, ]   <- c(-1, colMeans(Y, na.rm = TRUE))
+theta0[-1,-1] <- cov(Y, use = "pairwise.complete.obs") * (n - 1)/n # T2 CC
+
+# Run function
+theta_hat_f <- emFast(Y = Y, iters = 1e3, theta0 = theta0)
 
 # Target
-cov.wt(xy, wt = w1, method = "ML")$cov # i.e. method = "unbiased"
+cov.wt(Y, wt = w1, method = "ML")$cov # i.e. method = "unbiased"
 
-#
-# Starting value
-  theta0 <- matrix(rep(1, (p+1)^2 ), ncol = (p+1),
-                  dimnames = list(c("int", colnames(xy)),
-                                  c("int", colnames(xy))
-                  ))
-  theta0[, 1]   <- c(-1, rep(0, p)) # T1 CC
-  theta0[1, ]   <- c(-1, rep(0, p))
-
-  # Run function
-  theta_hat_f <- emFast(Y = xy, iters = 500, theta0 = theta0)
+# Define weights
+w1 <- c(0, 0, 0, 1, 1, 1, 1, 1, 0, 0)
