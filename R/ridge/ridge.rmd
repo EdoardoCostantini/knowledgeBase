@@ -51,14 +51,12 @@ which is the regular way of estimating regression coefficients with an added pen
 ## Code
 
 First let's set up the R environment.
-We'll need two packages: `glmnet` and `ridge`.
-We'll use them just to check how other people have implemented the same concepts.
+We'll use the `glmnet` to check how other people have implemented the same concepts.
 For these notes, we will work with the `mtcars` data.
 We will use the first column of the dataset (variable named `mpg`) as a dependent variable and the remaining ones as predictors.
 ```{r, results = 'hide', message = FALSE, warning = FALSE}
 # Load packages
 library(glmnet)
-library(ridge)
 
 # Take the mtcars data
 y <- mtcars[, "mpg"]
