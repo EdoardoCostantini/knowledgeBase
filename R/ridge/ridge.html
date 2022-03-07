@@ -297,7 +297,6 @@ pre code {
 <p><span class="math display">\[
 \hat{\beta}^{\text{ridge}} = \text{argmin}_{\beta} \left\{ \sum_{i=1}^{N} \left( y_i - \beta_0 - \sum_{j=1}^{p} x_{ij}\beta_j \right)^2 + \lambda \sum_{j=1}^{p}\beta_j^2 \right\}
 \]</span></p>
-<p>or equivalently</p>
 <p>with a one to one correspondence between the <span class="math inline">\(\lambda\)</span> and <span class="math inline">\(t\)</span> parameters. The ridge solutions are not equivariant under scaling of the inputs, and so one normally standardizes the inputs before solving the minimization problem.</p>
 <p>Notice that the intercept <span class="math inline">\(\beta_0\)</span> has been left out of the penalty term. Penalization of the intercept would make the procedure depend on the origin chosen for Y. By centering the predictors inputs, we can separate the solution to the <a href="https://www.notion.so/Ridge-regression-8134d8babda5413ab182df645c6196a8">minimazion problem</a> into two parts:</p>
 <ul>
