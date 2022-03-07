@@ -54,7 +54,7 @@ First let's set up the R environment.
 We'll use the `glmnet` to check how other people have implemented the same concepts.
 For these notes, we will work with the `mtcars` data.
 We will use the first column of the dataset (variable named `mpg`) as a dependent variable and the remaining ones as predictors.
-```{r, results = 'hide', message = FALSE, warning = FALSE}
+```{r set up, results = 'hide', message = FALSE, warning = FALSE}
 # Load packages
 library(glmnet)
 
@@ -70,7 +70,7 @@ p <- ncol(X)
 
 ### Fitting ridge regression manually
 First, let's **fit ridge regression** manually by separating the intercept and the regression coefficients estimation (two-step approach):
-```{r}
+```{r manual ridge}
 # Scale the data (standardize)
 X_scale <- scale(X, center = TRUE, scale = TRUE)
 
@@ -102,7 +102,7 @@ When fitting ridge regression, many sources reccomend to center the data.
 This allows to separate the estimation of the intercept from the estimation of the regression coefficients.
 As a result, only the regression coefficients are penalised.
 To understand the effect of centering, consider what happens in regular OLS estimation when **predictors are centered**:
-```{r}
+```{r centering X}
 # Create a version of X that is centered
 X_center <- scale(X, center = TRUE, scale = FALSE)
 
@@ -119,7 +119,7 @@ As for **scaling**, the important thing to not for now is that scaling allows th
 We can also avoid the penalisation of the intercept by setting to 0 the corresponding element in the `pen` object.
 By doing so, we can obtain the estimate of the intercept and the penalised regression coefficients in one step.
 
-```{r}
+```{r augmented design matrix}
   # Create desing matrix with intercept
   X_scale_dm <- cbind(1, X_scale)
 
@@ -157,7 +157,7 @@ To replicate the results we need to account for these.
 #### Use the biased estimation of variance
 First, let's obtain the results with the biased variance estimation:
 
-```{r}
+```{r biased variance}
 # Standardize X
 X_scale <- sapply(1:p, function (j){
   muj <- mean(X[, j])
@@ -190,7 +190,7 @@ round(
 
 #### Return the unstandardized coefficients
 Next, we need to revert these regression coefficients to their original scale.
-```{r}
+```{r Unstandardize coefs}
 # Extract the original mean and standard deviations of all X variables
 mean_x <- colMeans(X)
 sd_x <- sqrt(apply(X, 2, var) * (n - 1) / n) # biased version
@@ -213,7 +213,7 @@ round(
 Next, we can use `glmnet` to fit the ridge regression.
 Pay attention to the fact that the value of lambda has been reparametrized for the `glmnet()` function.
 
-```{r}
+```{r adjust lambda glmnet}
 # Extract the original mean and standard deviations of y (for lambda parametrization)
 mean_y <- mean(y)
 sd_y <- sqrt(var(y) * (n - 1) / n)
@@ -226,7 +226,7 @@ lambda_glmnet <- sd_y * lambda / n
 #### Compare manual and `glmnet` ridge regression output
 
 Finally, we can compare the results:
-```{r}
+```{r copmare fits}
 # Fit glmnet
 fit_glmnet_s <- glmnet(x = X,
                        y = y,
@@ -247,5 +247,5 @@ round(
 
 ```
 # TL;DR, just give me the code!
-```{r ref.label=knitr::all_labels(), echo=TRUE, eval=FALSE}
+```{r  TLDR, ref.label=knitr::all_labels(), echo=TRUE, eval=FALSE}
 ```
