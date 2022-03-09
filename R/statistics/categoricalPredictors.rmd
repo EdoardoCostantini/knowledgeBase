@@ -1,0 +1,137 @@
+---
+title: Categorical predictors in linear models
+author: "Edoardo Costantini"
+output:
+  html_document:
+    toc: true                    # table of content true
+    toc_depth: 4                 # number of headings for toc
+    number_sections: true        # if you want number sections at each table header
+    highlight: tango             # specifies the syntax highlighting style
+    css: ../../css/rmdstyles.css # css file for this project
+---
+
+# Preamble
+
+- Project:   knowledgeBase
+- Objective: Describe how categorical predictors can be used in linear models
+- Author:    Edoardo Costantini
+- Created:   2022-03-08
+- Modified:  `r format(Sys.time(), '%Y-%m-%d')`
+
+# Content
+
+This post is long.
+Just use the sections you need.
+If you know full well what dummy coding is and how it works, feel free to skip it.
+
+First let's set up the R environment.
+We'll need only one package: `wec`.
+We will use this to explore weighted effects codes.
+
+```{r Set up, results = 'hide', message = FALSE, warning = FALSE}
+# Set up -----------------------------------------------------------------------
+
+  # Load packages
+  library(wec)
+
+  # Take the a small sample of the iris data
+  set.seed(20220306)
+  iris_sub <- iris[sample(1:nrow(iris), 10), ]
+
+  # Focus only on three variables
+  iris_toy <- iris_sub[, c("Sepal.Length", "Sepal.Width", "Species")]
+
+```
+
+Now, let's see what happens when we try to use a categorical predictor in a linear model:
+
+```{r fitting lm}
+# Fitting a linear model with a categorical predictor --------------------------
+
+  # Fit lm
+  lm_out <- lm(Sepal.Length ~ Sepal.Width + Species, data = iris_toy)
+  coef(lm_out)
+
+```
+
+As you can see, we have one intercept, one regression coefficient for the numerical predictor `Sepal.Width`, and two regression coefficients for the categorical predictor.
+A single categorical predictor can need the estimation of more than one regression coefficients.
+Depending on the coding scheme we will use, a categorical predictor will require $k-1$ or $k$ regression coefficients, with $k$ being the number of categories.
+But let's take things one step at the time.
+
+First, to use categorical predictors in a linear model we need to code them in a way that allows for the estimation of the model parameters.
+In extremely crude terms, we need to turn the categories of the predictor into some form of numbers.
+To understand what happens with these predictors we need to spend a few words on the concept of a **design matrix**.
+
+## Design matrix
+A design matrix is --- INSERT DEFINITION ---
+Let's see how one looks in R.
+Let's start by looking at the desing matrix for a model regressing a numerical continuous variable on a single continuous predictor.
+
+```{r design matrix continuous}
+# Design Matrix ----------------------------------------------------------------
+
+  # Create a desing matrix for a simple linear regression w/ continuous pred
+  dm <- model.matrix(Sepal.Length ~ Sepal.Width, iris_sub)
+
+  # Check out what dm is
+  dm
+
+```
+
+This is just the categorical predictor with a column of 1s prepended.
+The column of 1s allows for the estimation of the intercept.
+Think about how linear models are estimated using the OLS matrix formulation:
+
+$\beta = (X'X)^{-1}X'y$
+
+In this notation, $X$ is our design matrix.
+If we had omitted the column of 1s, no intercept would have been estimated
+
+```{r linear fit with dm}
+  # For simplicity, call dm X, and assing Sepal.Length the name y
+  X <- dm
+  y <- iris_toy[, "Sepal.Length"]
+
+  # Regress y on X (i.e., estimate intercept and regression coefficient)
+  solve(t(X) %*% X) %*% t(X) %*% y
+
+  # Obtain the same with lm
+  coef(lm(y ~ -1 + X))
+
+```
+
+Now, let's look at a design matrix built for a model with a numerical *and* a categorical predictor.
+
+```{r design matrix categorical}
+# Design Matrix ----------------------------------------------------------------
+
+  # Create a desing matrix with a cont and categorical predictor
+  dm <- model.matrix(Sepal.Length ~ Sepal.Width + Species, iris_sub)
+
+  # Compare it with the original data
+  dm
+  iris_sub
+
+```
+
+Note the following things:
+
+- `dm` is tied to a specific linear model we want to fit, and the dependent variable of this model is not in it.
+- `dm` has a column of ones as a first column
+- `Sepal.Width` is present in both `dm` and `iris_sub` in the same exact form. When looking at `iris_sub`, this variable is just a column of a dataset, when looking at `dm` we know this variable is a predictor in a linear model.
+- `Species` is present in both `dm` and `iris_sub`, but it is represented in two different ways. In `iris_sub` a single column defines whether a unit of the data belongs to a flower species or another. In `dm` we are representing the same exact information with two numerical (binary) columns.
+
+## Different coding schemes
+
+### Dummy codes
+
+### Cell-means coding: the disjunction matrix
+
+### Unweighted effects codes
+
+### Weighted effects codes
+
+# TL;DR, just give me the code!
+```{r TLDR, ref.label=knitr::all_labels(), echo=TRUE, eval=FALSE}
+```
