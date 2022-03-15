@@ -1,0 +1,61 @@
+---
+title: Moderation in linear models
+author: "Edoardo Costantini"
+output:
+  html_document:
+    toc: true                    # table of content true
+    toc_depth: 4                 # number of headings for toc
+    number_sections: true        # if you want number sections at each table header
+    highlight: tango             # specifies the syntax highlighting style
+    css: ../../css/rmdstyles.css # css file for this project
+---
+
+# Preamble
+
+- Project:   knowledgeBase
+- Objective: Showcase moderation in linear models
+- Author:    Edoardo Costantini
+- Created:   2022-03-09
+- Modified:  `r format(Sys.time(), '%Y-%m-%d')`
+
+# Content
+
+## Concepts
+
+When analysis a phenomena with **additive models** we are trying to understand if the (partial) effect
+of a predicto on an outcome.
+We assume that this partial effect does not change based on the values of the other predictors.
+Consider the following linear additive model:
+\[
+  y = \beta_0 + \beta_1 * x_1 + \beta_2 * x_2
+\]
+If a unit increase in hours of study ($x_1$) leads to a half-unit increase ($\beta_1$) in the grade of the exam ($y$), controlling for the age of a person ($x_2$), we do not expect $\beta_1$ to be different for students of different ages.
+We expect $\beta_1$ to be the same for a 20-year-olds and for a 60-year-olds student.
+
+However, it might be that a single additional hour of study is more impactful for a young student than for an older student.
+If this is what you expect, then you want to move away from additive models and start working with **moderation**.
+Models with moderation effects allow us to entertain the possibility that the effect of a predictor $x_1$ is different for different levels of another predictor $x_2$.
+If this is the case, then we start thinking about *conditional effects*.
+What is the effect of an increased unit increase in hours of study ($x_1$) on the exam grade ($y$), for a 20-year-olds? What is that effect for a 60-year-olds?
+
+## R Code
+
+First let's set up the R environment.
+
+```{r Set up, results = 'hide', message = FALSE, warning = FALSE}
+# Load packages
+
+```
+
+
+*Here is what to do*
+
+```{r code chunk name}
+# Some code
+# Always levea a line empty at the end
+
+```
+
+# TL;DR, just give me the code!
+```{r TLDR, ref.label=knitr::all_labels(), echo=TRUE, eval=FALSE}
+```
