@@ -1,0 +1,138 @@
+---
+title: Concept Mover’s Distance
+author: "Edoardo Costantini"
+output:
+  html_document:
+    toc: true                    # table of content true
+    toc_depth: 4                 # number of headings for toc
+    number_sections: true        # if you want number sections at each table header
+    highlight: tango             # specifies the syntax highlighting style
+    css: ../../css/rmdstyles.css # css file for this project
+---
+
+# Preamble
+
+- Project:   knowledgeBase
+- Objective: TODO
+- Author:    Edoardo Costantini
+- Created:   2022-03-10
+- Modified:  `r format(Sys.time(), '%Y-%m-%d')`
+
+# Content
+
+Let's see how to asses the a text's engagement with a focal concept using [Concept Mover’s Distance (CMD)](https://www.dustinstoltz.com/code).
+For this we will use the `text2map` R package, so be sure to install it before we start.
+We will also use the `googledrive` package to download some files we need.
+
+```{r Set up, results = 'hide', message = FALSE, warning = FALSE}
+# Set up -----------------------------------------------------------------------
+
+# Load packages
+library(tm)
+library(text2map)
+library(googledrive)
+
+```
+Next, let's define a body of text we want to work with.
+In my research line, I'm interested in how some topics are dicussed in papers published in sociological journals.
+For this example, we will try to analyse three open-source articles from a leading sociological journal.
+So to start things off, let's read in the text of three articles from the American Sociological Review (ASR):
+
+```{r prep dtm, results = 'hide', message = FALSE, warning = FALSE}
+# Load 20 news articles from tm pacakge dealing with the topic of "crude oil"
+?crude
+data("crude")
+
+# Create the Document Term Matrix for this corpus
+dtm <- DocumentTermMatrix(crude)
+
+# These are the articles ids
+dtm$dimnames$Docs
+
+# Check out the terms
+head(dtm$dimnames$Terms)
+
+```
+
+Our goal is to find which articles actually deal with the topic of "crude oil".
+We want to use the Concept Mover’s Distance to find out.
+For a CMD to work, we need to have a good pre-trained source of **word embedding vectors** (with the “words” as row names).
+These can usually be found online quite easily.
+For a list of ideas look [here]{https://culturalcartography.gitlab.io/text2map/articles/CMDist-concept-movers-distance.html#word-embedding-matrix}.
+Here, we will use  fastText English Word Vectors trained on the Common Crawl (which you can download [ft.cc.en.300D.2M.Rds (1.4 Gbs)]{https://drive.google.com/file/d/17H4GOGedeGo0urQdDC-4e5qWQMeWLpGG/view?usp=sharing}).
+Store the file in a location you can easily access.
+I stored it in a "rds" directory located at the same level as the R script I'm suing for this post.
+Then, you can load the file with the following line (but replace `./rds/ft.cc.en.300D.2M.Rds` with the path to your file.
+The file is huge.
+It will take time.
+Be patient.
+Take a sip.
+
+```{r load word vector}
+# Read the word vector RDS file from your computer
+wv <- readRDS("./rds/ft.cc.en.300D.2M.Rds")
+
+# It's just a matrix
+class(wv)
+
+# with a LOT of rows
+dim(wv)
+
+# Check the first few rows and columns
+wv[1:10, 1:5]
+
+```
+
+Looks good.
+Now, we want to find words that relate to the topic of interest: crude oil.
+We want to find good **anchor terms** for our concept.
+We can use the `text2vec::sim2()` function to get the cosine distance between “oil” and its top 50 nearest neighbors.
+
+```{r define anchor terms}
+# Compute the cosine distance between survey and all other words in wv
+cosSim_survey <- text2vec::sim2(x = wv,
+                                y = wv["oil", , drop = FALSE],
+                                method = "cosine")
+
+# Print the first 50 nearest neighbors to survey
+head(sort(cosSim_survey[, 1], decreasing = TRUE), 50)
+
+```
+
+With a quick scan of these 50 terms I decide that my anchor terms should be:
+
+- oil
+- gas
+- petroleum
+- petrolium
+
+Now that we have settled on the anchor terms, we can use `CMDist` to find the closeness of the documents stored in a DTM matrix to the focal concepts denoted by these words.
+
+```{r CDM analysis single word}
+# CDM analysis -----------------------------------------------------------------
+
+# Single Word CDM
+closeness_oil <- CMDist(dtm = dtm, cw = "oil", wv = wv)
+
+# Print the
+head(closeness_oil)
+
+```
+
+In the output, we can see fr each document ("doc_id") what is the CMD engagement corresponding to the word "oil".
+
+```{r CDM analysis anchors}
+# Define a vector of anchors
+anchors <- c("oil", "gas", "petroleum", "petrolium")
+
+# Compute the CDM for all of them
+closeness_anchors <- CMDist(dtm = dtm, cw = anchors, wv = wv)
+
+# Print the first 6 docs's CDMs
+head(closeness_anchors)
+
+```
+
+# TL;DR, just give me the code!
+```{r TLDR, ref.label=knitr::all_labels(), echo=TRUE, eval=FALSE}
+```
