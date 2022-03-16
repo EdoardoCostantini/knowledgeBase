@@ -11,6 +11,7 @@ body {
   line-height: 1.6;
   font-weight: 400;
   font-family: "Roboto", "HelveticaNeue", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  color: #FFFFFF;
 }
 
 /**
@@ -18,7 +19,7 @@ body {
  */
 a {
   font-weight: normal;
-  text-decoration: none;
+  text-decoration: none; 
   color:#EF6D3D;
 }
 a:focus {
@@ -82,7 +83,7 @@ blockquote {
   font-size:1.8rem;
 }
 blockquote p:last-child {
-  margin-bottom: 0;
+  margin-bottom: 0;  
 }
 
 /**
@@ -99,10 +100,10 @@ body {
   max-width:800px;
   margin:25px auto;
 }
-header, #content, footer {
-  background: rgba(0,0,0,.8);
+header, #content, footer { 
+  background: rgba(0,0,0,.8); 
   padding:25px;
-  color:#FFFFFF;
+  color:#FFFFFF; 
 }
 
 /* Menu Links */
