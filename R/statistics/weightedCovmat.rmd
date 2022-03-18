@@ -1,30 +1,36 @@
 ---
 title: Weighted Covariance Matrix
 author: "Edoardo Costantini"
+params:
+  orig_date: "Created: 2022-03-14"
+  update_date: !r paste("Updated:", format(Sys.time(), '%Y-%m-%d'))
 output:
   html_document:
-    toc: true                    # table of content true
-    toc_depth: 4                 # number of headings for toc
-    number_sections: true        # if you want number sections at each table header
-    highlight: tango             # specifies the syntax highlighting style
-    css: ../../css/rmdstyles.css # css file for this project
+    toc: true             # table of content true
+    toc_float:
+        collapsed: false
+        smooth_scroll: false
+    toc_depth: 4          # up to three depths of headings (specified by #, ## and ###)
+    number_sections: true # if you want number sections at each table header
+    highlight: tango      # specifies the syntax highlighting style
+    css: ../../css/rmdstyles.css
 ---
 
-# Preamble
+`r params$orig_date`
 
-- Project:   knowledgeBase
-- Objective: Exploring the weighted covariance matrix
-- Author:    Edoardo Costantini
-- Created:   2022-03-14
-- Modified:  `r format(Sys.time(), '%Y-%m-%d')`
+`r params$update_date`
 
-# Content
+Objective: Exploring the weighted covariance matrix
+
+# Introduction
 
 In a sample made of groups of different sizes, descriptive statistics like the mean and the covariance between variables can be computed by assigning proper weights to account for the difference in group sizes.
  Wights are generally normalized:
 \[
   \sum_{i = 1}^{n} w_i = 1
 \]
+
+# Learn by coding
 
 ## Example
 

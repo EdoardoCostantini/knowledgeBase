@@ -1,28 +1,28 @@
 ---
 title: "Explore the ridge principle and ridge regression nuances"
 author: "Edoardo Costantini"
+params:
+  orig_date: "Created: 2022-02-28"
+  update_date: !r paste("Updated:", format(Sys.time(), '%Y-%m-%d'))
 output:
   html_document:
     toc: true             # table of content true
+    toc_float:
+        collapsed: false
+        smooth_scroll: false
     toc_depth: 4          # up to three depths of headings (specified by #, ## and ###)
     number_sections: true # if you want number sections at each table header
     highlight: tango      # specifies the syntax highlighting style
     css: ../../css/rmdstyles.css
 ---
 
-# Preamble
+`r params$orig_date`
 
-- Project:   knowledgeBase
-- Objective: explore the ridge principle and ridge regression nuances
-- Author:    Edoardo Costantini
-- Created:   2022-02-28
-- Modified:  `r format(Sys.time(), '%Y-%m-%d')`
-- Notion:    https://lavish-hollyhock-981.notion.site/Ridge-regression-8134d8babda5413ab182df645c6196a8
-- Other ref:
+`r params$update_date`
 
-# Content
+Objective: explore the ridge principle and ridge regression nuances
 
-## Introduction
+# Introduction
 
 When there are many correlated variables in a linear regression model, their coefficients can become poorly determined and exhibit high variance. By imposing a size constraint (or penalty) on the coefficients this problem is alleviated.
 
@@ -48,7 +48,7 @@ $$
 $$
 which is the regular way of estimating regression coefficients with an added penalty term ($\lambda \mathbf{I}$) on the diagonal of the cross-product matrix ($\mathbf{X}^T\mathbf{X}$) to make it invertible ($(...)^{-1}$).
 
-## Code
+# Learn by coding
 
 First let's set up the R environment.
 We'll use the `glmnet` to check how other people have implemented the same concepts.
@@ -68,7 +68,7 @@ p <- ncol(X)
 
 ```
 
-### Fitting ridge regression manually
+## Fitting ridge regression manually
 First, let's **fit ridge regression** manually by separating the intercept and the regression coefficients estimation (two-step approach):
 ```{r manual ridge}
 # Scale the data (standardize)
@@ -115,7 +115,7 @@ coef(lm_ols)["(Intercept)"] - mean(y)
 ```
 As for **scaling**, the important thing to not for now is that scaling allows the penalty term to act in the same way independently of the scale of the predictors.
 
-#### An alternative way to avoid penalising the intercept
+### An alternative way to avoid penalising the intercept
 We can also avoid the penalisation of the intercept by setting to 0 the corresponding element in the `pen` object.
 By doing so, we can obtain the estimate of the intercept and the penalised regression coefficients in one step.
 
@@ -143,7 +143,7 @@ By doing so, we can obtain the estimate of the intercept and the penalised regre
   )
 
 ```
-### Fit ridge regression with R packages
+## Fit ridge regression with R packages
 The most popular R package for regularised regression is `glmnet`.
 Let's see how we can replicate the results we obtained with the manual approach with glmnet.
 There are three important differences to consider:
@@ -154,7 +154,7 @@ There are three important differences to consider:
 
 To replicate the results we need to account for these.
 
-#### Use the biased estimation of variance
+### Use the biased estimation of variance
 First, let's obtain the results with the biased variance estimation:
 
 ```{r biased variance}
@@ -188,7 +188,7 @@ round(
 
 ```
 
-#### Return the unstandardized coefficients
+### Return the unstandardized coefficients
 Next, we need to revert these regression coefficients to their original scale.
 ```{r Unstandardize coefs}
 # Extract the original mean and standard deviations of all X variables
@@ -209,7 +209,7 @@ round(
 )
 
 ```
-#### Adjust the parametrization of $\lambda$ for `glmnet`
+### Adjust the parametrization of $\lambda$ for `glmnet`
 Next, we can use `glmnet` to fit the ridge regression.
 Pay attention to the fact that the value of lambda has been reparametrized for the `glmnet()` function.
 
@@ -223,7 +223,7 @@ lambda_glmnet <- sd_y * lambda / n
 
 ```
 
-#### Compare manual and `glmnet` ridge regression output
+### Compare manual and `glmnet` ridge regression output
 
 Finally, we can compare the results:
 ```{r copmare fits}

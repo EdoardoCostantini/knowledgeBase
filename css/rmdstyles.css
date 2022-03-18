@@ -3,3 +3,11 @@ body{
   font-family: Helvetica;
   font-size: 13pt;
 }
+
+#TOC{
+  position: fixed;
+  left: 30px;
+  width: 500px;
+  max-width:100%;
+  overflow:auto;
+}
