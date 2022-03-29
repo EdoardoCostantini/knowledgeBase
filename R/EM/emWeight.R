@@ -12,6 +12,7 @@
 
 # Generate some data -----------------------------------------------------------
 
+  rm(list = ls())
   set.seed(20220327)
   n <- 1e4
   p <- 3
@@ -24,17 +25,37 @@
 # Compute weighted covariance matrix -------------------------------------------
 
   cov_wt_fu <- cov.wt(Y, wt = wi, method = "ML")
+  cov_wt_fu$cov
 
 # Impose missingness at random -------------------------------------------------
 
-  Y[sample(1:nrow(Y), nrow(Y)*.1), 1] <- NA
-  Y[sample(1:nrow(Y), nrow(Y)*.1), 2] <- NA
+  amputeY <- mice::ampute(Y,
+                          prop = .5,
+                          patterns = matrix(c(1, 1, 0,
+                                              1, 0, 1,
+                                              1, 0, 0), ncol = 3, byrow = TRUE),
+                          mech = "MAR",
+                          type = "RIGHT"
+  )
+
+  # mice::md.pattern(amputeY$amp)
+  Y <- as.matrix(amputeY$amp)
 
 # Estimate weighted covariance matrix with EM ----------------------------------
 
 # Store the theta you would have gotten with complete case analysis
 obs_cc <- rowSums(is.na(Y)) == 0
 cov_wt_cc <- cov.wt(Y[obs_cc, ], wt = wi[obs_cc], method = "ML")
+
+# Vector of centers
+data.frame(CC = cov_wt_cc$center,
+           FULL = cov_wt_fu$center
+)
+
+# Covariance matrix
+data.frame(CC = c(cov_wt_cc$cov),
+           FULL = c(cov_wt_fu$cov)
+)
 
 # > Preliminaries --------------------------------------------------------------
 
@@ -105,7 +126,7 @@ cov_wt_cc <- cov.wt(Y[obs_cc, ], wt = wi[obs_cc], method = "ML")
 
   # Starting values
   theta <- theta0
-  iters <- 500
+  iters <- 50
   ith_theta <- NULL
 
   # Iterations
@@ -173,13 +194,35 @@ cov_wt_cc <- cov.wt(Y[obs_cc, ], wt = wi[obs_cc], method = "ML")
   }
 
 # Covariance matrix
-data.frame(CC = c(cov_wt_cc$cov),
-           FULL = c(cov_wt_fu$cov),
-           EM = c(theta[-1, -1])
+data.frame(CC = as.vector(cov_wt_cc$cov),
+           FULL = as.vector(cov_wt_fu$cov),
+           EM_start = as.vector(theta0[-1, 1]),
+           EM = as.vector(theta[-1, -1])
 )
 
 # Vector of centers
 data.frame(CC = cov_wt_cc$center,
            FULL = cov_wt_fu$center,
+           EM_start = theta0[-1, 1],
            EM = theta[-1, 1]
 )
+
+# EM update
+vectomat <- function (comat){
+  names_vec <- unlist(lapply(rownames(comat), function (i){
+    paste0(i, "-", rownames(comat))
+  }))
+  comat_vec <- as.vector(comat)
+  names(comat_vec) <- names_vec
+  return(comat_vec)
+}
+
+cbind(full = vectomat(cov_wt_fu$cov),
+      EM = vectomat(theta[-1, -1]),
+      diff = round(vectomat(cov_wt_fu$cov) - vectomat(theta[-1, -1]),
+                   3))
+
+cbind(full = vectomat(cov_wt_fu$cov),
+      EM = vectomat(cov_wt_cc$cov),
+      diff = round(vectomat(cov_wt_fu$cov) - vectomat(cov_wt_cc$cov),
+                   3))
