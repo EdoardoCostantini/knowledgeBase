@@ -88,7 +88,7 @@ rm(list = ls())
 # Prepare data ------------------------------------------------------------
 
   # EM Estimate of descriptives for data with missing values
-  Y <- dat_mm # chose dataset here
+  Y <- dat_mg # chose dataset here
   n <- nrow(Y)
   p <- ncol(Y)
 
@@ -121,6 +121,79 @@ rm(list = ls())
     columns = c("test", "replications", "elapsed",
                 "relative", "user.self", "sys.self")
   )
+
+# RNG data ---------------------------------------------------------------------
+
+  set.seed(20220327)
+  n <- 1e4
+  p <- 3
+  Sig <- matrix(rep(1.5, p*p), ncol = p)
+    diag(Sig) <- 3
+  Y <- MASS::mvrnorm(n, rep(10, p), Sig)
+  colnames(Y) <- paste0("y", 1:p)
+
+# Estimate covmat on the original data
+
+  cov_og <- cov(Y) * (n-1) / n # ML version
+  muv_og <- colMeans(Y)
+
+# Impose missingness
+
+  amputeY <- mice::ampute(Y,
+                          prop = .5,
+                          patterns = matrix(c(1, 1, 0,
+                                              1, 0, 1,
+                                              1, 0, 0), ncol = 3, byrow = TRUE),
+                          mech = "MAR",
+                          type = "RIGHT"
+  )
+
+  Ymiss <- as.matrix(amputeY$amp)
+
+# Estimate covmat on the listwise deletion data
+
+  cov_cc <- cov(Ymiss, use = "complete.obs") * (n-1) / n # ML version
+  muv_cc <- colMeans(Ymiss, na.rm = TRUE)
+
+# Estimate covmat with EM
+  # Give a bad starting value
+  theta0 <- matrix(rep(NA, (p+1)^2 ), ncol = (p+1),
+                   dimnames = list(c("int", colnames(Y)),
+                                   c("int", colnames(Y))
+                   ))
+  theta0[, 1]   <- c(-1, rep(0, p)) # T1 CC
+  theta0[1, ]   <- c(-1, rep(0, p))
+  theta0[-1,-1] <- diag(p)
+
+  # Run function
+  theta_hat <- emSchafer(Y = Ymiss, iters = 500, theta0 = theta0)
+  theta_hat_f <- emFast(Y = Ymiss, iters = 500, theta0 = theta0)
+
+  # Extract results
+  cov_EM <- theta_hat_f[-1, -1]
+  muv_EM <- theta_hat_f[-1, 1]
+
+# Compare results
+
+  # function to simplify comparison between covmats
+  vectomat <- function (comat){
+          names_vec <- unlist(lapply(rownames(comat), function (i){
+            paste0(i, "-", rownames(comat))
+          }))
+          comat_vec <- as.vector(comat)
+          names(comat_vec) <- names_vec
+          # Only unique
+          return(comat_vec[!duplicated(comat_vec)])
+        }
+
+  # compare covmats
+  cbind(OG = vectomat(cov_og),
+        cc = vectomat(cov_cc),
+        EM = vectomat(cov_EM),
+        diff_cc = round(vectomat(cov_og) - vectomat(cov_cc), 3),
+        diff_EM = round(vectomat(cov_og) - vectomat(cov_EM), 3)
+  )
+
 
 # Weighted version -------------------------------------------------------------
 
