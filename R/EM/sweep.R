@@ -81,7 +81,7 @@ library(fastmatrix)            # alternative sweep
 # Any multivariate model
 # Sweep any variables as predictor of any variable
   # Define the dvs
-  dvs <- c("V1", "V3")
+  dvs <- c("V1", "V3", "V4")
 
   # Define the predictors
   preds <- c("V2", "V5")
