@@ -2,7 +2,7 @@
 # Objective: function to estimate descriptives on data w/ miss fast R style
 # Author:    Edoardo Costantini
 # Created:   2021-12-02
-# Modified:  2022-03-27
+# Modified:  2022-03-30
 # Notion:
 # Other ref:
 # Note:      This function implements the EM psuedo code for normal data
@@ -16,20 +16,18 @@
   set.seed(20220327)
   n <- 1e4
   p <- 3
-  Y <- MASS::mvrnorm(n, rep(10, p), diag(1.5, p))
+  Sig <- matrix(rep(1.5, p*p), ncol = p)
+  diag(Sig) <- 3
+  Y <- MASS::mvrnorm(n, rep(10, p), Sig)
   colnames(Y) <- paste0("y", 1:p)
 
   # Define wegihts
   wi <- runif(n)
-  wi <- rep(.2, nrow(Y))
 
 # Compute weighted covariance matrix -------------------------------------------
 
   cov_wt_fu <- cov.wt(Y, wt = wi, method = "ML")
-  cov.wt(Y, wt = wi, method = "ML")
   cov_wt_fu$cov
-  cov(Y) * (n-1) / n
-  cov.wt(Y, wt = rep(.2, nrow(Y)), method = "ML")$cov
 
 # Impose missingness at random -------------------------------------------------
 
@@ -42,7 +40,6 @@
                           type = "RIGHT"
   )
 
-  # mice::md.pattern(amputeY$amp)
   Ymiss <- as.matrix(amputeY$amp)
 
 # Estimate weighted covariance matrix with EM ----------------------------------
@@ -182,7 +179,7 @@
             # k <- 1
             K <- which(v_all == v_mis[k])
             if(K >= J){
-              Tmat[K+1, J+1] <- Tmat[K+1, J+1] + theta[K+1, J+1] + cjs[i, j] * cjs[i, k] * wi[obs[i]]
+              Tmat[K+1, J+1] <- Tmat[K+1, J+1] + (theta[K+1, J+1] + cjs[i, j] * cjs[i, k]) * wi[obs[i]]
               Tmat[J+1, K+1] <- Tmat[K+1, J+1]
             }
           }
@@ -218,10 +215,11 @@ vectomat <- function (comat){
   }))
   comat_vec <- as.vector(comat)
   names(comat_vec) <- names_vec
-  return(comat_vec)
+  return(comat_vec[!duplicated(comat_vec)])
 }
 
 cbind(full = vectomat(cov_wt_fu$cov),
+      EM_start = vectomat(theta0[-1, -1]),
       EM = vectomat(theta[-1, -1]),
       diff = round(vectomat(cov_wt_fu$cov) - vectomat(theta[-1, -1]),
                    3))
