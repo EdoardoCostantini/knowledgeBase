@@ -166,8 +166,8 @@ rm(list = ls())
   theta0[-1,-1] <- diag(p)
 
   # Run function
-  theta_hat <- emSchafer(Y = Ymiss, iters = 500, theta0 = theta0)
-  theta_hat_f <- emFast(Y = Ymiss, iters = 500, theta0 = theta0)
+  theta_hat <- emSchafer(Y = Ymiss, iters = 50, theta0 = theta0)
+  theta_hat_f <- emFast(Y = Ymiss, iters = 50, theta0 = theta0)
 
   # Extract results
   cov_EM <- theta_hat_f[-1, -1]
@@ -194,33 +194,108 @@ rm(list = ls())
         diff_EM = round(vectomat(cov_og) - vectomat(cov_EM), 3)
   )
 
+# RNG data: weighted version ---------------------------------------------------
 
-# Weighted version -------------------------------------------------------------
+# Generate data
 
-# use example dataset from example of stats::cov.wt()
-Y <- Y_full <- cbind(Y1 = 1:10, Y2 = c(1:3, 8:5, 8:10))
+  # Set seed
+  set.seed(20220327)
 
-# Add a missing value
-Y[10, 1] <- NA
-Y[1, 2] <- NA
+  # Define data generation model parameters
+  n <- 1e4
+  p <- 3
+  Sig <- matrix(rep(1.5, p*p), ncol = p)
+  diag(Sig) <- 3
 
-p <- ncol(Y)
-n <- nrow(Y)
 
-# Starting value
-theta0 <- matrix(rep(NA, (p+1)^2 ), ncol = (p+1),
-                dimnames = list(c("int", colnames(Y)),
-                                c("int", colnames(Y))
-                ))
-theta0[, 1]   <- c(-1, colMeans(Y, na.rm = TRUE)) # T1 CC
-theta0[1, ]   <- c(-1, colMeans(Y, na.rm = TRUE))
-theta0[-1,-1] <- cov(Y, use = "pairwise.complete.obs") * (n - 1)/n # T2 CC
+  # Sample data
+  Y <- as.data.frame(MASS::mvrnorm(n, rep(10, p), Sig))
 
-# Run function
-theta_hat_f <- emFast(Y = Y, iters = 1e3, theta0 = theta0)
+  # Fix column names
+  colnames(Y) <- paste0("y", 1:p)
 
-# Target
-cov.wt(Y, wt = w1, method = "ML")$cov # i.e. method = "unbiased"
+  # Devide in groups
+  nstates <- 4
+  Y$state <- factor(rep(1:nstates, n/nstates))
 
-# Define weights
-w1 <- c(0, 0, 0, 1, 1, 1, 1, 1, 0, 0)
+  # Create different variances per group
+  Y[Y$state == 1, c(1:3)] <- Y[Y$state == 1, c(1:3)] * 2
+  Y[Y$state == 2, c(1:3)] <- Y[Y$state == 1, c(1:3)] * .5
+  Y[Y$state == 3, c(1:3)] <- Y[Y$state == 1, c(1:3)] * 1.5
+
+  # New true covariance matrix
+  cov(Y[, 1:3])
+
+  # Sample different sizes of groups
+  Ys <- NULL
+  sample_sizes <- c(.3, .5, .8, .2)
+  for (i in 1:nstates){
+    subsamp_index <- sample(1:(n/nstates), n/nstates * sample_sizes[i])
+    Ys[[i]] <- Y[Y$state == i, ][subsamp_index, ]
+    Ys[[i]]$wi <- sample_sizes[i]
+  }
+  Ys <- do.call(rbind, Ys)
+
+  # Ww need cov.wt to get a good estimate of the population covariance matrix
+  cov(Y[, 1:3])
+  cov(Ys[, 1:3])
+  cov.wt(Ys[, 1:3], wt = 1/(Ys$wi))$cov
+
+  # Impose missingness at random
+  amputeY <- mice::ampute(Ys[, 1:3],
+                          prop = .5,
+                          patterns = matrix(c(1, 1, 0,
+                                              1, 0, 1,
+                                              1, 0, 0), ncol = 3, byrow = TRUE),
+                          mech = "MAR",
+                          type = "RIGHT"
+  )
+  Ymiss <- as.matrix(amputeY$amp)
+
+  # Define wegihts
+  wi <- 1/Ys$wi
+
+# Estimate covmat on the original data
+
+  covw_og <- cov.wt(Ys[, 1:3], wt = wi, method = "ML")$cov
+  muvw_og <- cov.wt(Ys[, 1:3], wt = wi, method = "ML")$center
+
+# Estiamte covmat on listwise deletion
+  cc_index <- rowSums(is.na(Ymiss)) == 0
+  covw_cc <- cov.wt(Ymiss[cc_index, ], wt = wi[cc_index], method = "ML")$cov
+  muvw_cc <- cov.wt(Ymiss[cc_index, ], wt = wi[cc_index], method = "ML")$center
+
+# Estimate covmat with EM
+
+  # Bad starting theta
+  theta0 = matrix(rep(NA, (p+1)^2 ), ncol = (p+1),
+                  dimnames = list(c("int", colnames(Ymiss)),
+                                  c("int", colnames(Ymiss))
+                  ))
+  theta0[, 1]   = c(-1, rep(5, p)) # T1 CC
+  theta0[1, ]   = c(-1, rep(5, p))
+  theta0[-1,-1] = diag(p)
+
+  # Estimate with EM not weighted
+  theta_nw <- emFast(Y = Ymiss, iters = 10, theta0 = theta0)
+  # theta_nw <- emWeight(Y = Ymiss, wi = rep(1, p), iters = 25, theta0 = theta0)
+  covnw_EM <- theta_nw[-1, -1]
+  muvnw_EM <- theta_nw[-1, 1]
+
+  # Estimate with EM and actual weights
+  theta_w  <- emWeight(Y = Ymiss, wi = wi, iters = 25, theta0 = theta0)
+  covw_EM <- theta_w[-1, -1]
+  muvw_EM <- theta_w[-1, 1]
+
+# Comparison
+
+  # The weighted version
+  cbind(pop = vectomat(cov(Y[, 1:3])),
+        sample_ccw = vectomat(covw_cc),
+        sample_OG = vectomat(cov(Ys[, 1:3])),
+        sample_EM = vectomat(covnw_EM),
+        sample_OGw = vectomat(covw_og),
+        sample_EMw = vectomat(covw_EM),
+        diff_cc = round(vectomat(covw_og) - vectomat(covw_cc), 3),
+        diff_EMw = round(vectomat(covw_og) - vectomat(covw_EM), 3)
+  )

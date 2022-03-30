@@ -10,64 +10,20 @@
 #            Schafer 1997 (figure 5.2 under section 5.3.3), but tries
 #            to use R vectorisation to make the code faster and easier to read.
 
-# Generate some data -----------------------------------------------------------
-
-  rm(list = ls())
-  set.seed(20220327)
-  n <- 1e4
-  p <- 3
-  Sig <- matrix(rep(1.5, p*p), ncol = p)
-  diag(Sig) <- 3
-  Y <- MASS::mvrnorm(n, rep(10, p), Sig)
-  colnames(Y) <- paste0("y", 1:p)
-
-  # Define wegihts
-  wi <- runif(n)
-
-# Compute weighted covariance matrix -------------------------------------------
-
-  cov_wt_fu <- cov.wt(Y, wt = wi, method = "ML")
-  cov_wt_fu$cov
-
-# Impose missingness at random -------------------------------------------------
-
-  amputeY <- mice::ampute(Y,
-                          prop = .5,
-                          patterns = matrix(c(1, 1, 0,
-                                              1, 0, 1,
-                                              1, 0, 0), ncol = 3, byrow = TRUE),
-                          mech = "MAR",
-                          type = "RIGHT"
-  )
-
-  Ymiss <- as.matrix(amputeY$amp)
-
-# Estimate weighted covariance matrix with EM ----------------------------------
-
-  # Store the theta you would have gotten with complete case analysis
-  obs_cc <- rowSums(is.na(Ymiss)) == 0
-  cov_wt_cc <- cov.wt(Ymiss[obs_cc, ], wt = wi[obs_cc], method = "ML")
-
-  # Vector of centers
-  data.frame(CC = cov_wt_cc$center,
-             FULL = cov_wt_fu$center
-  )
-
-  # Covariance matrix
-  data.frame(CC = c(cov_wt_cc$cov),
-             FULL = c(cov_wt_fu$cov)
-  )
+emWeight <- function (Y, wi, iters, theta0){
+  ## Example Inputs
+  # Y = Y
+  # wi <- runif(nrow(Y))
+  # iters = 5e2
+  # theta0 = matrix(rep(NA, (p+1)^2 ), ncol = (p+1),
+  #                 dimnames = list(c("int", colnames(Y)),
+  #                                 c("int", colnames(Y))
+  #                                 ))
+  # theta0[, 1]   = c(-1, colMeans(Y, na.rm = TRUE)) # T1 CC
+  # theta0[1, ]   = c(-1, colMeans(Y, na.rm = TRUE))
+  # theta0[-1,-1] = cov(Y, use = "pairwise.complete.obs") * (n - 1)/n # T2 CC
 
 # > Preliminaries --------------------------------------------------------------
-
-  # Bad starting theta
-  theta0 = matrix(rep(NA, (p+1)^2 ), ncol = (p+1),
-                  dimnames = list(c("int", colnames(Ymiss)),
-                                  c("int", colnames(Ymiss))
-                  ))
-  theta0[, 1]   = c(-1, rep(5, p)) # T1 CC
-  theta0[1, ]   = c(-1, rep(5, p))
-  theta0[-1,-1] = diag(p)
 
   # Define Missing data patterns
   patts <- mice::md.pattern(Ymiss, plot = FALSE)
@@ -127,7 +83,6 @@
 
   # Starting values
   theta <- theta0
-  iters <- 50
   ith_theta <- NULL
 
   # Iterations
@@ -194,37 +149,6 @@
     theta <- ith_theta[[it]]
   }
 
-# Covariance matrix
-data.frame(CC = as.vector(cov_wt_cc$cov),
-           FULL = as.vector(cov_wt_fu$cov),
-           EM_start = as.vector(theta0[-1, 1]),
-           EM = as.vector(theta[-1, -1])
-)
+  return(theta)
 
-# Vector of centers
-data.frame(CC = cov_wt_cc$center,
-           FULL = cov_wt_fu$center,
-           EM_start = theta0[-1, 1],
-           EM = theta[-1, 1]
-)
-
-# EM update
-vectomat <- function (comat){
-  names_vec <- unlist(lapply(rownames(comat), function (i){
-    paste0(i, "-", rownames(comat))
-  }))
-  comat_vec <- as.vector(comat)
-  names(comat_vec) <- names_vec
-  return(comat_vec[!duplicated(comat_vec)])
 }
-
-cbind(full = vectomat(cov_wt_fu$cov),
-      EM_start = vectomat(theta0[-1, -1]),
-      EM = vectomat(theta[-1, -1]),
-      diff = round(vectomat(cov_wt_fu$cov) - vectomat(theta[-1, -1]),
-                   3))
-
-cbind(full = vectomat(cov_wt_fu$cov),
-      cc = vectomat(cov_wt_cc$cov),
-      diff = round(vectomat(cov_wt_fu$cov) - vectomat(cov_wt_cc$cov),
-                   3))
