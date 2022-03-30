@@ -21,11 +21,15 @@
 
   # Define wegihts
   wi <- runif(n)
+  wi <- rep(.2, nrow(Y))
 
 # Compute weighted covariance matrix -------------------------------------------
 
   cov_wt_fu <- cov.wt(Y, wt = wi, method = "ML")
+  cov.wt(Y, wt = wi, method = "ML")
   cov_wt_fu$cov
+  cov(Y) * (n-1) / n
+  cov.wt(Y, wt = rep(.2, nrow(Y)), method = "ML")$cov
 
 # Impose missingness at random -------------------------------------------------
 
@@ -39,42 +43,42 @@
   )
 
   # mice::md.pattern(amputeY$amp)
-  Y <- as.matrix(amputeY$amp)
+  Ymiss <- as.matrix(amputeY$amp)
 
 # Estimate weighted covariance matrix with EM ----------------------------------
 
-# Store the theta you would have gotten with complete case analysis
-obs_cc <- rowSums(is.na(Y)) == 0
-cov_wt_cc <- cov.wt(Y[obs_cc, ], wt = wi[obs_cc], method = "ML")
+  # Store the theta you would have gotten with complete case analysis
+  obs_cc <- rowSums(is.na(Ymiss)) == 0
+  cov_wt_cc <- cov.wt(Ymiss[obs_cc, ], wt = wi[obs_cc], method = "ML")
 
-# Vector of centers
-data.frame(CC = cov_wt_cc$center,
-           FULL = cov_wt_fu$center
-)
+  # Vector of centers
+  data.frame(CC = cov_wt_cc$center,
+             FULL = cov_wt_fu$center
+  )
 
-# Covariance matrix
-data.frame(CC = c(cov_wt_cc$cov),
-           FULL = c(cov_wt_fu$cov)
-)
+  # Covariance matrix
+  data.frame(CC = c(cov_wt_cc$cov),
+             FULL = c(cov_wt_fu$cov)
+  )
 
 # > Preliminaries --------------------------------------------------------------
 
   # Bad starting theta
   theta0 = matrix(rep(NA, (p+1)^2 ), ncol = (p+1),
-                  dimnames = list(c("int", colnames(Y)),
-                                  c("int", colnames(Y))
+                  dimnames = list(c("int", colnames(Ymiss)),
+                                  c("int", colnames(Ymiss))
                   ))
   theta0[, 1]   = c(-1, rep(5, p)) # T1 CC
   theta0[1, ]   = c(-1, rep(5, p))
   theta0[-1,-1] = diag(p)
 
   # Define Missing data patterns
-  patts <- mice::md.pattern(Y, plot = FALSE)
+  patts <- mice::md.pattern(Ymiss, plot = FALSE)
     R <- patts[-nrow(patts),-ncol(patts), drop = FALSE]
-    R <- R[, colnames(Y), drop = FALSE]
+    R <- R[, colnames(Ymiss), drop = FALSE]
 
   # Data dimensionality
-  n <- nrow(Y)
+  n <- nrow(Ymiss)
 
   # Number of missing data patterns
   S <- nrow(R)
@@ -86,7 +90,7 @@ data.frame(CC = c(cov_wt_cc$cov),
   M <- apply(R, 1, function(x) {colnames(R)[x == 0]})
 
   # Define I matrices (which obs in which pattern)
-  ry <- !is.na(Y)
+  ry <- !is.na(Ymiss)
   R_logi <- R == 1 # pattern config saved as True and False
   I <- vector("list", S)
   for (s in 1:S) {
@@ -106,7 +110,7 @@ data.frame(CC = c(cov_wt_cc$cov),
 
   for(s in 1:S){
     # Define what you are working with in this miss patt
-    Y_s <- Y[I[[s]], , drop = FALSE]
+    Y_s <- Ymiss[I[[s]], , drop = FALSE]
     wi_s <- wi[I[[s]]]
 
     # Weigthed augmented design matrix
@@ -144,14 +148,14 @@ data.frame(CC = c(cov_wt_cc$cov),
       obs   <- I[[s]]
       v_obs <- O[[s]]
       v_mis <- M[[s]]
-      v_all <- colnames(Y)
+      v_all <- colnames(Ymiss)
 
       # Sweep theta over predictors for this missing data pattern
       theta <- ISR3::SWP(theta, v_obs)
 
       # Define expectations (individual contributions)
       betas <- theta[c("int", v_obs), v_mis]
-      cjs <- cbind(1, Y[obs, v_obs, drop = FALSE]) %*% betas
+      cjs <- cbind(1, Ymiss[obs, v_obs, drop = FALSE]) %*% betas
 
       # Update Tmat matrix ##
       for(i in seq_along(obs)){
@@ -168,7 +172,7 @@ data.frame(CC = c(cov_wt_cc$cov),
           for(k in seq_along( v_obs )){
             # k <- 1
             K <- which(v_all == v_obs[k])
-            Tmat[K+1, J+1] <- Tmat[K+1, J+1] + cjs[i, j] * Y[obs[i], K] * wi[obs[i]]
+            Tmat[K+1, J+1] <- Tmat[K+1, J+1] + cjs[i, j] * Ymiss[obs[i], K] * wi[obs[i]]
             Tmat[J+1, K+1] <- Tmat[K+1, J+1]
           }
 
@@ -223,6 +227,6 @@ cbind(full = vectomat(cov_wt_fu$cov),
                    3))
 
 cbind(full = vectomat(cov_wt_fu$cov),
-      EM = vectomat(cov_wt_cc$cov),
+      cc = vectomat(cov_wt_cc$cov),
       diff = round(vectomat(cov_wt_fu$cov) - vectomat(cov_wt_cc$cov),
                    3))
